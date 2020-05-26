@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css" />
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/popper.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/forge-0.7.0.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+
+    <style>
+        .container {
+            width: 800px;
+            font-size: 13px;
+        }
+        
+        .progress {
+            position: relative;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        
+        .progress .value {
+            position: absolute;
+            color: #3fb867;
+            left: 50%;
+        }
+        
+        .row {
+            border-bottom: 1px solid gray;
+            padding: 10px;
+        }
+        
+        .btn-custom {
+            color: #fcfcfc !important;
+            font-size: 12px;
+            margin: 0 10px;
+        }
+        
+        .label {
+            margin: 0 10px;
+            font-size: 12px !important;
+        }
+        
+        .control {
+            margin: 0 10px;
+            font-size: 12px !important;
+        }
+    </style>
+
+    <title>文件分块上传</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form class="form-inline" role="form">
+                    <div class="form-group">
+                        <label class="form-label label">选择文件: </label>
+                        <input type="file" class="form-control control" id="fileinput" />
+                    </div>
+                    <div class="form-group">
+                        <a id="submit" class="btn btn-xs btn-primary btn-custom">提交</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row" id="process1" style="display: none;">
+            <div class="col-md-4">计算文件SHA1进度</div>
+            <div class="col-md-8">
+                <div class="progress">
+                    <div id="checkProcessStyle1" class="progress-bar" style="width: 0%;"></div>
+                    <p id="checkProcessValue1" class="value">0%</p>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="process2" style="display: none;">
+            <div class="col-md-4">上传文件进度</div>
+            <div class="col-md-8">
+                <div class="progress">
+                    <div id="uploadProcessStyle2" class="progress-bar" style="width: 0%;"></div>
+                    <p id="uploadProcessValue2" class="value">0%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let blobSlice =
+            File.prototype.slice ||
+            File.prototype.webkitSlice ||
+            File.prototype.mozSlice;
+
+        let defaultChunkSize = 1024 * 1024 * 5;
+        let defaultChunkCount = 0;
+
+        let file = null;
+        let fileSha1 = "";
+
+        // 存储分块上传初始化接口的响应数据
+        let upInitRes = null;
+        // 存储每一个分块的hash值(sha1)
+        let chunksSha1 = new Map();
+
+        $("body").on("click", "#submit", function() {
+            let files = document.querySelector("#fileinput").files;
+            if (!files.length) {
+                alert("当前没有选择文件");
+                return false;
+            }
+            file = files[0];
+            defaultChunkCount = Math.ceil(file.size / defaultChunkSize);
+            startUpload(file);
+        });
+
+        // 0. 响应点击
+        async function startUpload(file) {
+            // 1. 校验文件, 计算文件Sha1
+            $("#process1").slideDown(200);
+            fileSha1 = await calcFileSha1();
+            console.log("fileSha1: " + fileSha1);
+
+            // 2. 初始化分块上传，并校验文件是否已存在
+            let res = await multipartUploadInit();
+            console.log("mpupload init result:" + res);
+
+            res = JSON.parse(res);
+            if (res && res.code == 10006) {
+                alert("文件已存在，无需上传");
+                return false;
+            } else if (
+                res == null ||
+                (res.code != 0 && res.code != 10000) ||
+                res.data == null
+            ) {
+                alert(`上传初始化失败: ${upInitRes}`);
+                return false;
+            }
+            upInitRes = res.data;
+
+            // 3. 根据初始化接口响应结果，计算需要上传的分块的hash
+            await calcChunkSha1();
+
+            // 4. 上传文件分块
+            $("#process2").slideDown(200);
+            await uploadChunks();
+
+            // 5. 合并分块
+            multipartUploadComplete();
+        }
+
+        // 计算文件hash
+        function calcFileSha1() {
+            return new Promise((resolve, reject) => {
+                var currentChunk = 0,
+                    currentSize = 0,
+                    forgeMD = forge.md.sha1.create(),
+                    fileReader = new FileReader();
+
+                fileReader.onload = function(e) {
+                    let content = e.target.result;
+                    // 滚动更新文件sha1
+                    forgeMD.update(content);
+                    currentChunk++;
+                    currentSize += content.length;
+
+                    console.log(
+                        `currentChunk: ${currentChunk} chunkSize: ${content.length}`
+                    );
+                    if (currentChunk < defaultChunkCount) {
+                        loadNext();
+                    } else {
+                        $("#checkProcessStyle1").css({
+                            width: "100%"
+                        });
+                        $("#checkProcessValue1").html("100%");
+                        resolve(forgeMD.digest().toHex());
+                    }
+                };
+
+                function loadNext() {
+                    let start = currentChunk * defaultChunkSize;
+                    let end =
+                        start + defaultChunkSize >= file.size ?
+                        file.size :
+                        start + defaultChunkSize;
+
+                    // fileReader.readAsArrayBuffer(blobSlice.apply(file, [start, end]));
+                    fileReader.readAsBinaryString(blobSlice.apply(file, [start, end]));
+
+                    let percent =
+                        Math.floor((currentChunk / defaultChunkCount) * 100) + "%";
+                    $("#checkProcessStyle1").css({
+                        width: percent
+                    });
+                    $("#checkProcessValue1").html(percent);
+                }
+
+                loadNext();
+            });
+        }
+
+        // 计算文件各分块hash
+        function calcChunkSha1() {
+            return new Promise((resolve, reject) => {
+                var currentChunk = 0,
+                    fileReader = new FileReader();
+
+                fileReader.onload = function(e) {
+                    let content = e.target.result;
+
+                    // 计算当前分块sha1
+                    var tmpMD = forge.md.sha1.create();
+                    tmpMD.update(content);
+                    chunksSha1.set(currentChunk, tmpMD.digest().toHex());
+
+                    currentChunk++;
+
+                    if (currentChunk < upInitRes.ChunkCount) {
+                        loadNext();
+                    } else {
+                        console.log(chunksSha1);
+                        resolve();
+                    }
+                };
+
+                function loadNext() {
+                    if (currentChunk >= upInitRes.ChunkCount) {
+                        resolve();
+                        return;
+                    }
+
+                    let existChunk =
+                        upInitRes.ChunkExists.indexOf(currentChunk + 1) > -1;
+                    if (existChunk) {
+                        // 跳过已上传的分块
+                        currentChunk++;
+                        loadNext();
+                    } else {
+                        let start = currentChunk * upInitRes.ChunkSize;
+                        let end =
+                            start + upInitRes.ChunkSize >= file.size ?
+                            file.size :
+                            start + upInitRes.ChunkSize;
+                        fileReader.readAsBinaryString(
+                            blobSlice.apply(file, [start, end])
+                        );
+                    }
+                }
+
+                loadNext();
+            });
+        }
+
+        // 初始化分块上传，并校验文件是否已存在
+        function multipartUploadInit() {
+            return new Promise((resolve, reject) => {
+                let extra = `&filehash=${fileSha1}&filesize=${file.size}`;
+                let url = `${serverHost}/file/mpupload/init?` + queryParams() + extra;
+                $.post(url, (data) => {
+                    resolve(data);
+                });
+            });
+        }
+
+        // 检查已上传分块，并上传未上传分块
+        async function uploadChunks() {
+            let hasUploaded = upInitRes.ChunkExists.length;
+            for (let i = 0; i < upInitRes.ChunkCount; i++) {
+                let existChunk = upInitRes.ChunkExists.indexOf(i + 1) > -1;
+                //存在则不再上传
+                if (!existChunk) {
+                    await doUploadChunk(i);
+
+                    hasUploaded++;
+
+                    //计算百分比
+                    let percent =
+                        Math.floor((hasUploaded / upInitRes.ChunkCount) * 100) + "%";
+                    $("#uploadProcessStyle2").css({
+                        width: percent
+                    });
+                    $("#uploadProcessValue2").html(percent);
+                }
+            }
+        }
+
+        // 上传指定分块
+        function doUploadChunk(chunkIdx) {
+            return new Promise((resolve, reject) => {
+                let end =
+                    (chunkIdx + 1) * upInitRes.ChunkSize >= file.size ?
+                    file.size :
+                    (chunkIdx + 1) * upInitRes.ChunkSize;
+                //构建表单参数
+                let url =
+                    `${serverHost}/file/mpupload/uppart?${queryParams()}` +
+                    `&index=${chunkIdx + 1}&uploadid=${
+              upInitRes.UploadID
+            }&chkhash=${chunksSha1.get(chunkIdx)}`;
+                $.ajax({
+                    url: url,
+                    type: "post",
+                    data: file.slice(chunkIdx * upInitRes.ChunkSize, end),
+                    async: true,
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        console.log(data);
+                        resolve(data);
+                    },
+                });
+            });
+        }
+
+        // 分块上传完成，通知合并分块
+        function multipartUploadComplete() {
+            let extra =
+                `&uploadid=${upInitRes.UploadID}&filesize=${file.size}` +
+                `&filename=${file.name}&filehash=${fileSha1}`;
+            let url =
+                `${serverHost}/file/mpupload/complete?` + queryParams() + extra;
+            $.post(url, function(data) {
+                console.log(data);
+                let res = JSON.parse(data);
+                if (res.code == 0 || res.code == 10000) {
+                    setTimeout(() => {
+                        window.location.href = "/static/view/home.html";
+                    }, 500);
+                }
+            });
+        }
+
+        $("#fileinput").on("change", function() {
+            $("#checkProcessStyle1").css({
+                width: "0%"
+            });
+            $("#checkProcessValue1").html("0%");
+            $("#checkProcessStyle2").css({
+                width: "0%"
+            });
+            $("#checkProcessValue2").html("0%");
+            $("#process1").slideUp(200);
+            $("#process2").slideUp(200);
+        });
+    </script>
+</body>
+
+</html>
