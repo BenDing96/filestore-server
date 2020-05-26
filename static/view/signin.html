@@ -8,6 +8,7 @@
 
     <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
     <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
 
     <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
     <script src="/static/js/bootstrap.min.js"></script>
@@ -19,41 +20,42 @@
     <form>
         <div style="width:500px;margin:10px auto;text-align: center;">
             <div style="font-size:28px;font-weight:bold;margin:0px auto;">用户登录</div>
-            <br/>
-            <table style="width:100%;text-align: left;"> 
+            <br />
+            <table style="width:100%;text-align: left;">
                 <tbody>
                     <tr style="margin-bottom: 20px;">
                         <td>
-                                <span class="p">*</span>
-                                <label for="username" class="l"> 用户名:</label>
+                            <span class="p">*</span>
+                            <label for="username" class="l"> 用户名:</label>
                         </td>
                         <td>
-                                <input id="username" type="text" 
-                                style="height:30px;width:250px;padding-right:50px;">
+                            <input id="username" type="text" style="height:30px;width:250px;padding-right:50px;">
                         </td>
                     </tr>
-                    <tr><td><br></td><td></td></tr>
+                    <tr>
+                        <td><br></td>
+                        <td></td>
+                    </tr>
                     <tr style="margin-bottom: 20px;">
-                            <td>
-                                    <span class="p">*</span>
-                                    <label for="password" class="l"> 密码:</label>
-                            </td>
-                            <td>
-                                    <input id="password" type="text" 
-                                    style="height:30px;width:250px;padding-right:50px;">
-                            </td>
-                        </tr>
-                            <tr><td><br></td><td></td></tr>
-                            <tr>
-                                    <td>
-                                    </td>
-                                    <td>
-                                            <input class="btn btn-success" type="button"
-                                                style="margin:0 auto;width:250px;" 
-                                                value="登录"
-                                                onclick='onSignin()'/>
-                                    </td>
-                                </tr>
+                        <td>
+                            <span class="p">*</span>
+                            <label for="password" class="l"> 密码:</label>
+                        </td>
+                        <td>
+                            <input id="password" type="text" style="height:30px;width:250px;padding-right:50px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><br></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>
+                        </td>
+                        <td>
+                            <input class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="登录" onclick='onSignin()' />
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -67,22 +69,21 @@
         $.ajax({
             url: "/user/signin",
             type: "POST",
-            data: {"username" :  username.value, "password" :  password.value},
+            data: {
+                "username": username.value,
+                "password": password.value
+            },
             error: function(err) {
-                    alert(err);
+                alert(err);
             },
             success: function(body) {
-                if (body === "FAILED") {
-                    alert("登录失败");
-                    return;
-                }
                 var resp = JSON.parse(body);
-                print(resp);
-                localStorage.setItem("token", resp.data.Token);
-                localStorage.setItem("username", resp.data.Username);
+                localStorage.setItem("token", resp.data.Token)
+                localStorage.setItem("username", resp.data.Username)
                 window.location.href = resp.data.Location;
             }
         });
     }
 </script>
+
 </html>

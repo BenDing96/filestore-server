@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	dbplayer "filestore-server/db"
 	"filestore-server/meta"
 	"filestore-server/util"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-	dbplayer "filestore-server/db"
 )
 
 // UploadHandler: 处理文件上传
@@ -119,60 +119,45 @@ func FileQueryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// DownloadHandler: 下载上传后的文件
-func DownloadHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	fileSha1 := r.Form.Get("filehash")
-	fileMeta := meta.GetFileMeta(fileSha1)
-
-	file, err := os.Open(fileMeta.Location)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("Content-Disposition",
-		"attachment; filename=\""+fileMeta.FileName+"\"")
-	w.Write(data)
-}
-
-// FileMetaUpdateHandler: 更新元信息接口（重命名）
+// FileMetaUpdateHandler ： 更新元信息接口(重命名)
 func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	opType := r.Form.Get("op")
 	fileSha1 := r.Form.Get("filehash")
+	username := r.Form.Get("username")
 	newFileName := r.Form.Get("filename")
-	if opType != "0" {
+
+	if opType != "0" || len(newFileName) < 1 {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	if r.Method == "POST" {
+	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
-	curFileMeta := meta.GetFileMeta(fileSha1)
-	curFileMeta.FileName = newFileName
-	meta.UpdateFileMeta(curFileMeta)
 
-	w.WriteHeader(http.StatusOK)
-	data, err := json.Marshal(curFileMeta)
+	// 更新用户文件表tbl_user_file中的文件名，tbl_file的文件名不用修改
+	_ = dbplayer.RenameFileName(username, fileSha1, newFileName)
+
+	// 返回最新的文件信息
+	userFile, err := dbplayer.QueryUserFileMeta(username, fileSha1)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	data, err := json.Marshal(userFile)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
 // FileDeleteHandler: 删除文件及元信息
-func FileDeleteHandler (w http.ResponseWriter, r *http.Request) {
+func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	fileSha1 := r.Form.Get("filehash")
@@ -205,25 +190,25 @@ func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 	if fileMeta.FileSha1 == "" {
 		resp := util.RespMsg{
 			Code: -1,
-			Msg: "秒传失败，请访问普通上传接口",
+			Msg:  "秒传失败，请访问普通上传接口",
 		}
 		w.Write(resp.JSONBytes())
 		return
 	}
 
 	// 4. 上传过则将文件信息写入用户文件表，返回成功
-	suc := dbplayer.OnUserFileUploadFinished(username,filehash,filename,int64(filesize))
+	suc := dbplayer.OnUserFileUploadFinished(username, filehash, filename, int64(filesize))
 	if suc {
 		resp := util.RespMsg{
-			Code:0,
-			Msg:"秒传成功",
+			Code: 0,
+			Msg:  "秒传成功",
 		}
 		w.Write(resp.JSONBytes())
 		return
 	} else {
 		resp := util.RespMsg{
-			Code:-2,
-			Msg:"秒传失败，请稍后重试",
+			Code: -2,
+			Msg:  "秒传失败，请稍后重试",
 		}
 		w.Write(resp.JSONBytes())
 		return

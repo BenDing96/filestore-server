@@ -102,7 +102,6 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	// token := r.Form.Get("token")
 
-
 	//// 2. 验证token是否有效（在拦截器中处理过了）
 	//isValidToken := IsTokenValid(token)
 	//if !isValidToken {
@@ -120,7 +119,7 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// 4. 组装并且相应用户数据
 	resp := util.RespMsg{
 		Code: 0,
-		Msg: "OK",
+		Msg:  "OK",
 		Data: user,
 	}
 	w.Write(resp.JSONBytes())
@@ -144,7 +143,6 @@ func IsTokenValid(token string) bool {
 	if util.Hex2Dec(tokenTS) < time.Now().Unix()-86400 {
 		return false
 	}
-
 	// TODO: 从数据库表中tbl_user_token查询username对应的token信息
 	// TODO: 对比两个token是否一致
 
