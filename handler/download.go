@@ -27,7 +27,9 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 
 	fm, _ := meta.GetFileMetaDB(fsha1)
+
 	userFile, err := dblayer.QueryUserFileMeta(username, fsha1)
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
