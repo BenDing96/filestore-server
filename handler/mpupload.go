@@ -49,7 +49,7 @@ type MultipartUploadInfo struct {
 }
 
 // IntialMutltipartUploadHandler：初始化分块上传
-func IntialMutltipartUploadHandler(w http.ResponseWriter, r *http.Request) {
+func InitialMultipartUploadHandler(w http.ResponseWriter, r *http.Request) {
 	// 1. 解析用户请求
 	r.ParseForm()
 	username := r.Form.Get("username")
