@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	dbplayer "filestore-server/db"
 	"filestore-server/meta"
+	"filestore-server/store/oss"
 	"filestore-server/util"
 	"fmt"
 	"io"
@@ -54,6 +55,24 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		newFile.Seek(0, 0)
 		fileMeta.FileSha1 = util.FileSha1(newFile)
+
+		// 同时将文件写入ceph存储
+		newFile.Seek(0, 0)
+		//data, _ := ioutil.ReadAll(newFile)
+		//bucket := ceph.GetCephConnection("userfile")
+		//cephPath := "/ceph/" + fileMeta.FileSha1
+		//_ := bucket.Put(cephPath, data, "octet-stream", s3.PublicRead)
+		//fileMeta.Location = cephPath
+
+		ossPath := "/oss/" + fileMeta.FileSha1
+		err = oss.Bucket().PutObject(ossPath, newFile)
+		if err != nil {
+			fmt.Println(err.Error())
+			w.Write([]byte("Upload failed!"))
+			return
+		}
+		fileMeta.Location = ossPath
+
 		_ = meta.UpdateFileMetaDB(fileMeta)
 
 		// 更新用户文件表记录
