@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2a3e50e1-c5b0-4ee2-8173-31425a95244b" name="Default Changelist" comment="" />
+    <list default="true" id="2a3e50e1-c5b0-4ee2-8173-31425a95244b" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -32,6 +35,7 @@
         <counts>
           <entry key="README" value="1" />
           <entry key="css" value="9" />
+          <entry key="gitignore" value="1" />
           <entry key="go" value="129" />
           <entry key="html" value="24" />
           <entry key="jpeg" value="2" />
@@ -43,6 +47,7 @@
           <entry key="sql" value="4" />
           <entry key="sum" value="1" />
           <entry key="ts" value="5" />
+          <entry key="txt" value="1" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -54,15 +59,17 @@
           <entry key="Image" value="3" />
           <entry key="JavaScript" value="4" />
           <entry key="Markdown" value="5" />
-          <entry key="PLAIN_TEXT" value="2" />
+          <entry key="PLAIN_TEXT" value="3" />
           <entry key="RNG Compact" value="1" />
           <entry key="SQL" value="4" />
+          <entry key="Scratch" value="1" />
           <entry key="TypeScript" value="5" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="README" value="183" />
+          <entry key="gitignore" value="23" />
           <entry key="go" value="20050" />
           <entry key="html" value="42" />
           <entry key="md" value="64" />
@@ -77,7 +84,7 @@
           <entry key="Go" value="20047" />
           <entry key="HTML" value="42" />
           <entry key="Markdown" value="64" />
-          <entry key="PLAIN_TEXT" value="490" />
+          <entry key="PLAIN_TEXT" value="513" />
           <entry key="SQL" value="5" />
         </counts>
       </usages-collector>
@@ -85,15 +92,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/mq/producer.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="24" column="1" selection-start-line="24" selection-start-column="1" selection-end-line="24" selection-end-column="1" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/handler/download.go">
           <provider selected="true" editor-type-id="text-editor">
@@ -138,11 +136,20 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/handler/handler.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="315">
               <caret line="34" column="26" selection-start-line="34" selection-start-column="26" selection-end-line="34" selection-end-column="26" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret column="7" selection-start-column="7" selection-end-column="7" />
             </state>
           </provider>
         </entry>
@@ -236,6 +243,7 @@
         <option value="$PROJECT_DIR$/config/rabbitmq.go" />
         <option value="$PROJECT_DIR$/mq/producer.go" />
         <option value="$PROJECT_DIR$/handler/handler.go" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -307,7 +315,8 @@
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/dingzheyu/go/pkg/mod/gopkg.in/amz.v1@v1.0.0-20150111123259-ad23e96a31d2/aws/aws.go" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1591390116988" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1592439990441" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="TEXT" />
     <property name="go.gopath.indexing.explicitly.defined" value="true" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -400,7 +409,7 @@
       <workItem from="1590943737896" duration="1546000" />
       <workItem from="1591164672758" duration="1104000" />
       <workItem from="1591167344450" duration="1779000" />
-      <workItem from="1592439186030" duration="192000" />
+      <workItem from="1592439186030" duration="447000" />
     </task>
     <task id="LOCAL-00001" summary="Revise README">
       <created>1589054198032</created>
@@ -469,7 +478,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="139432000" />
+    <option name="totallyTimeSpent" value="139687000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -563,12 +572,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/static/img/avatar.jpeg">
-      <provider selected="true" editor-type-id="images" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/static/js/bootstrap.min.js">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/test_mpupload_normal.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -891,10 +894,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/handler/handler.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
           <caret line="34" column="26" selection-start-line="34" selection-start-column="26" selection-end-line="34" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="7" selection-start-column="7" selection-end-column="7" />
         </state>
       </provider>
     </entry>
