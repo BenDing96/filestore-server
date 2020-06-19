@@ -7,4 +7,5 @@ const (
 	CephSecretKey = ""
 	// CephGWEndpoint : gateway地址
 	CephGWEndpoint = "http://127.0.0.1:9080"
+
 )
