@@ -3,7 +3,10 @@ package handler
 import (
 	"encoding/json"
 	dbplayer "filestore-server/db"
+	cmn "filestore-server/common"
+	cfg "filestore-server/config"
 	"filestore-server/meta"
+	"filestore-server/mq"
 	"filestore-server/store/oss"
 	"filestore-server/util"
 	"fmt"
@@ -66,12 +69,30 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		ossPath := "/oss/" + fileMeta.FileSha1
 		err = oss.Bucket().PutObject(ossPath, newFile)
-		if err != nil {
-			fmt.Println(err.Error())
-			w.Write([]byte("Upload failed!"))
-			return
+		//if err != nil {
+		//	fmt.Println(err.Error())
+		//	w.Write([]byte("Upload failed!"))
+		//	return
+		//}
+		//fileMeta.Location = ossPath
+
+		data := mq.TransferData{
+			FileHash:      fileMeta.FileSha1,
+			CurLocation:   fileMeta.Location,
+			DestLocation:  ossPath,
+			DestStoreType: cmn.StoreOSS,
 		}
-		fileMeta.Location = ossPath
+
+		pubData, _ := json.Marshal(data)
+		pubSuc := mq.Publish(
+			cfg.TransExchangeName,
+			cfg.TransOSSRoutingKey,
+			pubData)
+		if !pubSuc {
+			// TODO: 加入重拾发送消息逻辑
+
+		}
+
 
 		_ = meta.UpdateFileMetaDB(fileMeta)
 
